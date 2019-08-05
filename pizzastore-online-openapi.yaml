@@ -1,0 +1,227 @@
+
+openapi: 3.0.1
+
+info:
+  description: |
+    This is the API specification made for the PizzaStore Online kata (used for training or practicing in ubitec).
+    
+    **NOT IN SCOPE**:
+    - Authorization
+    - Pagination
+
+
+    **References**:
+      - https://ubitecag.atlassian.net/wiki/spaces/DEV/pages/1324024135/Axon.ivy+Kata+-+PizzaStore+Online
+
+  version: '0.1.0'
+  title: PizzaStore Online API
+  contact:
+    email: hau.tran@ubitec.com
+
+paths:
+
+  /orders:
+    post:
+      tags:
+      - Order
+      summary: Create a new Order. This is a public API.
+      parameters:
+        - in: header
+          name: x-requested-by
+          schema:
+            type: string
+            required: true
+
+      requestBody:
+        content:
+          schema:
+            $ref: "#/components/schemas/Order"
+
+  /orders/{orderId}:
+    get:
+      tags:
+      - Order
+      summary: Get a details of an `Order`.
+      parameters:
+        - in: path
+          name: orderId
+          schema:
+            type: string
+          required: true
+          description: an UUID of the `Order`.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptedOrder"
+
+  /pizzas:
+    get:
+      tags:
+      - Pizza
+      summary: List all the pizzas
+      description: |
+        To make things simple, the `price` of each `Pizza` will be the same regardless of `size` and `crust`.
+
+        **Not in scope:**
+        - pagination
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pizza"
+
+  /drinks:
+    get:
+      tags:
+      - Drink
+      summary: List all the drinks
+      description: |
+        **Not in scope:**
+        - pagination
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Drink"
+
+  /users/{username}:
+    get:
+      tags:
+      - Users
+      summary: get the user profile
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+          
+
+components:
+
+  schemas:
+    Order:
+      type: object
+      description: An online Order made by customer
+      required:
+        - deliveryAddress
+        - phoneNumber
+      properties:
+        name:
+          type: string
+        deliveryAddress:
+          type: string
+        phoneNumber:
+          type: string
+        pizzas:
+          type: array
+          items:
+            $ref: "#/components/schemas/PizzaOrderItem"
+        drinks:
+          type: array
+          items:
+            $ref: "#/components/schemas/DrinkOrderItem"
+
+      
+    AcceptedOrder:
+      description: An `Order` which is saved in PizzaStore Online.
+      allOf:
+        - type: object
+          required:
+            - orderedDateTime
+            - orderId
+          properties:
+            orderedDateTime:
+              type: string
+              format: date-time
+            orderId:
+              type: string
+              format: uuid
+        - $ref: "#/components/schemas/Order"
+
+    PizzaOrderItem:
+      type: object
+      description: An order for Pizza in PizzaStore
+      properties:
+        id:
+          type: string
+          description: The `id` refers to the Pizza in the store.
+          required: true
+        size:
+          type: string
+          enum: ['small', 'medium', 'large']
+        crust:
+          type: string
+          enum: ['thin', 'thick', 'cripsy']
+        quantity:
+          type: number
+
+    DrinkOrderItem:
+      type: object
+      description: A drink order to PizzaStore
+      properties:
+        id:
+          type: string
+          description: The `id` refers to a Drink item.
+          required: true
+        description:
+          type: string
+        quantity:
+          type: number
+  
+    Pizza:
+      type: object
+      description: A Pizza in PizzaStore
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+          format: uuid
+          required: true
+        description:
+          type: string
+        size:
+          type: string
+          enum: ['small', 'medium', 'large']
+        crust:
+          type: string
+          enum: ['thin', 'thick', 'cripsy']
+        price:
+          type: number
+          format: double
+      
+    Drink:
+      type: object
+      description: A drink in PizzaStore
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+          format: uuid
+          required: true
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+
+    User:
+      type: object
+      required:
+      -  username
+      properties:
+        username:
+          type: string
+        role:
+          type: string
+          enum: ['receiptionist', 'chef', 'delivery']
